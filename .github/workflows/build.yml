@@ -69,19 +69,19 @@ jobs:
         GOOS=windows GOARCH=amd64 go build -o movie-tinder-windows-amd64.exe .
 
     - name: Upload Linux binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: movie-tinder-linux-amd64
         path: movie-tinder-linux-amd64
 
     - name: Upload macOS binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: movie-tinder-darwin-amd64
         path: movie-tinder-darwin-amd64
 
     - name: Upload Windows binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: movie-tinder-windows-amd64
         path: movie-tinder-windows-amd64.exe
