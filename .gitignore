@@ -1,0 +1,9 @@
+# Binaries
+movie-tinder
+
+# User data
+movie_data.json
+
+# OS files
+.DS_Store
+Thumbs.db
