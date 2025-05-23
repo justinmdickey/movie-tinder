@@ -1,6 +1,6 @@
 # Movie Tinder 🎬
 
-A simple "Tinder for movies" terminal app built with Go and BubbleTea. Swipe through top movies and keep track of what you like!
+A terminal-based "Tinder for movies" app built with Go and Bubble Tea. Discover and rate top movies with an intuitive swipe-like interface, all from your command line!
 
 ## Installation
 
@@ -22,7 +22,7 @@ A simple "Tinder for movies" terminal app built with Go and BubbleTea. Swipe thr
 1. Get a free OMDB API key from: http://www.omdbapi.com/apikey.aspx
 2. Clone and build:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/yourusername/movie-tinder.git
    cd movie-tinder
    go build -o movie-tinder .
    export OMDB_API_KEY="your_api_key_here"
@@ -40,20 +40,29 @@ A simple "Tinder for movies" terminal app built with Go and BubbleTea. Swipe thr
 
 ## Features
 
-- Swipe through 50 top movies of all time
-- Clean, minimal terminal interface with lipgloss styling
-- Persistent storage of liked/superliked/disliked movies
-- Superlike system for favorite movies
-- "Not seen" option to re-encounter movies
-- View your liked movies list with categories
-- Progress tracking
+- 🎭 Discover 50 top movies of all time
+- ✨ Beautiful terminal interface with smooth styling
+- 💾 Persistent storage of your movie preferences
+- ⭐ Superlike system for absolute favorites  
+- 🔄 "Not seen" option to re-encounter movies later
+- 📋 View your curated list of liked movies by category
+- 📊 Progress tracking through the movie collection
+- 🚀 Cross-platform support (Linux, macOS, Windows)
 
 ## Storage
 
 Your movie preferences are saved in `movie_data.json` in the same directory.
 
-## Dependencies
+## Technologies
 
-- [BubbleTea](https://github.com/charmbracelet/bubbletea) - Terminal UI framework
-- [Lipgloss](https://github.com/charmbracelet/lipgloss) - Styling and layout
-- OMDB API - Movie data
+- **[Bubble Tea](https://github.com/charmbracelet/bubbletea)** - Modern terminal UI framework for Go
+- **[Lipgloss](https://github.com/charmbracelet/lipgloss)** - Styling and layout library
+- **[OMDB API](http://www.omdbapi.com/)** - Movie database for rich film information
+
+## Contributing
+
+Feel free to open issues or submit pull requests! This project was built as a fun exploration of terminal UI development with Go.
+
+## License
+
+MIT License - feel free to use this project as inspiration for your own terminal applications!

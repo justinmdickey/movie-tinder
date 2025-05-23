@@ -1,0 +1,116 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  auto-release:
+    name: Auto Release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Generate version
+      id: version
+      run: |
+        # Generate version based on commit count and short hash
+        COMMIT_COUNT=$(git rev-list --count HEAD)
+        SHORT_HASH=$(git rev-parse --short HEAD)
+        VERSION="v1.0.${COMMIT_COUNT}-${SHORT_HASH}"
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Generated version: ${VERSION}"
+
+    - name: Create tag
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag ${{ steps.version.outputs.VERSION }}
+        git push origin ${{ steps.version.outputs.VERSION }}
+
+    - name: Build binaries
+      run: |
+        # Create dist directory
+        mkdir -p dist
+        
+        # Build for Linux (amd64)
+        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-linux-amd64 .
+        
+        # Build for Linux (arm64)
+        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/movie-tinder-linux-arm64 .
+        
+        # Build for macOS (amd64)
+        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-darwin-amd64 .
+        
+        # Build for macOS (arm64 - M1/M2)
+        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/movie-tinder-darwin-arm64 .
+        
+        # Build for Windows (amd64)
+        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-windows-amd64.exe .
+        
+        # Create archives
+        cd dist
+        
+        # Linux amd64
+        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz movie-tinder-linux-amd64
+        
+        # Linux arm64
+        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz movie-tinder-linux-arm64
+        
+        # macOS amd64
+        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz movie-tinder-darwin-amd64
+        
+        # macOS arm64
+        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz movie-tinder-darwin-arm64
+        
+        # Windows amd64
+        zip movie-tinder-${{ steps.version.outputs.VERSION }}-windows-amd64.zip movie-tinder-windows-amd64.exe
+
+    - name: Generate checksums
+      run: |
+        cd dist
+        sha256sum *.tar.gz *.zip > checksums.txt
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: Movie Tinder ${{ steps.version.outputs.VERSION }}
+        body: |
+          ## Movie Tinder ${{ steps.version.outputs.VERSION }}
+          
+          Automatically generated release from master branch.
+          
+          ### Installation
+          
+          Download the appropriate binary for your platform and run:
+          
+          ```bash
+          # Set your OMDB API key
+          export OMDB_API_KEY="your_api_key_here"
+          
+          # Run the app
+          ./movie-tinder-*
+          ```
+          
+          ### Checksums
+          See `checksums.txt` for file integrity verification.
+          
+          ### What's Changed
+          - Latest changes from master branch
+        files: |
+          dist/*.tar.gz
+          dist/*.zip
+          dist/checksums.txt
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
