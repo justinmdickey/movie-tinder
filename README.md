@@ -1,5 +1,7 @@
 # Movie Tinder 🎬
 
+Test
+
 A terminal-based "Tinder for movies" app built with Go and Bubble Tea. Discover and rate top movies with an intuitive swipe-like interface, all from your command line!
 
 ## Installation
@@ -9,10 +11,11 @@ A terminal-based "Tinder for movies" app built with Go and Bubble Tea. Discover 
 1. Get a free OMDB API key from: http://www.omdbapi.com/apikey.aspx
 2. Download the latest release for your platform from [Releases](../../releases)
 3. Extract and run:
+
    ```bash
    # Set your API key
    export OMDB_API_KEY="your_api_key_here"
-   
+
    # Run the app
    ./movie-tinder-*
    ```
@@ -44,7 +47,7 @@ A terminal-based "Tinder for movies" app built with Go and Bubble Tea. Discover 
 - 🎭 Discover 100 top movies of all time
 - ✨ Beautiful terminal interface with smooth styling
 - 💾 Persistent storage of your movie preferences
-- ⭐ Superlike system for absolute favorites  
+- ⭐ Superlike system for absolute favorites
 - 🔄 "Not seen" option to re-encounter movies later
 - 📋 View your curated list of liked movies by category
 - 🔄 Reset functionality to start fresh anytime
@@ -68,3 +71,4 @@ Feel free to open issues or submit pull requests! This project was built as a fu
 ## License
 
 MIT License - feel free to use this project as inspiration for your own terminal applications!
+
