@@ -1,0 +1,87 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Run go fmt check
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted properly:"
+          gofmt -s -l .
+          exit 1
+        fi
+
+    - name: Build for current platform
+      run: go build -v ./...
+
+  build:
+    name: Build Cross Platform
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Build for multiple platforms
+      run: |
+        # Build for Linux (amd64)
+        GOOS=linux GOARCH=amd64 go build -o movie-tinder-linux-amd64 .
+        
+        # Build for macOS (amd64)
+        GOOS=darwin GOARCH=amd64 go build -o movie-tinder-darwin-amd64 .
+        
+        # Build for Windows (amd64)
+        GOOS=windows GOARCH=amd64 go build -o movie-tinder-windows-amd64.exe .
+
+    - name: Upload Linux binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: movie-tinder-linux-amd64
+        path: movie-tinder-linux-amd64
+
+    - name: Upload macOS binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: movie-tinder-darwin-amd64
+        path: movie-tinder-darwin-amd64
+
+    - name: Upload Windows binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: movie-tinder-windows-amd64
+        path: movie-tinder-windows-amd64.exe

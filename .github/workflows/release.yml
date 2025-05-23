@@ -1,0 +1,157 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Get the version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build binaries
+      run: |
+        # Create dist directory
+        mkdir -p dist
+        
+        # Build for Linux (amd64)
+        GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-linux-amd64 .
+        
+        # Build for Linux (arm64)
+        GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/movie-tinder-linux-arm64 .
+        
+        # Build for macOS (amd64)
+        GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-darwin-amd64 .
+        
+        # Build for macOS (arm64 - M1/M2)
+        GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/movie-tinder-darwin-arm64 .
+        
+        # Build for Windows (amd64)
+        GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/movie-tinder-windows-amd64.exe .
+        
+        # Create archives
+        cd dist
+        
+        # Linux amd64
+        tar -czf movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz movie-tinder-linux-amd64
+        
+        # Linux arm64
+        tar -czf movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-arm64.tar.gz movie-tinder-linux-arm64
+        
+        # macOS amd64
+        tar -czf movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz movie-tinder-darwin-amd64
+        
+        # macOS arm64
+        tar -czf movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-arm64.tar.gz movie-tinder-darwin-arm64
+        
+        # Windows amd64
+        zip movie-tinder-${{ steps.get_version.outputs.VERSION }}-windows-amd64.zip movie-tinder-windows-amd64.exe
+
+    - name: Generate checksums
+      run: |
+        cd dist
+        sha256sum *.tar.gz *.zip > checksums.txt
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Movie Tinder ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## Movie Tinder ${{ steps.get_version.outputs.VERSION }}
+          
+          ### Installation
+          
+          Download the appropriate binary for your platform and run:
+          
+          ```bash
+          # Set your OMDB API key
+          export OMDB_API_KEY="your_api_key_here"
+          
+          # Run the app
+          ./movie-tinder-*
+          ```
+          
+          ### Checksums
+          See `checksums.txt` for file integrity verification.
+          
+          ### What's Changed
+          - See commit history for detailed changes
+        draft: false
+        prerelease: false
+
+    - name: Upload Linux amd64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz
+        asset_name: movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Linux arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-arm64.tar.gz
+        asset_name: movie-tinder-${{ steps.get_version.outputs.VERSION }}-linux-arm64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload macOS amd64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
+        asset_name: movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload macOS arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-arm64.tar.gz
+        asset_name: movie-tinder-${{ steps.get_version.outputs.VERSION }}-darwin-arm64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Windows amd64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/movie-tinder-${{ steps.get_version.outputs.VERSION }}-windows-amd64.zip
+        asset_name: movie-tinder-${{ steps.get_version.outputs.VERSION }}-windows-amd64.zip
+        asset_content_type: application/zip
+
+    - name: Upload checksums
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/checksums.txt
+        asset_name: checksums.txt
+        asset_content_type: text/plain

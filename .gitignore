@@ -1,8 +1,12 @@
 # Binaries
 movie-tinder
+movie-tinder-*
 
 # User data
 movie_data.json
+
+# Build artifacts
+dist/
 
 # OS files
 .DS_Store
