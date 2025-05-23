@@ -140,7 +140,7 @@ func fetchMovie(client *OMDBClient, imdbID string) tea.Cmd {
 }
 
 func feedbackTimer() tea.Cmd {
-	return tea.Tick(time.Millisecond*1500, func(time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond*800, func(time.Time) tea.Msg {
 		return feedbackTimeout{}
 	})
 }
@@ -344,15 +344,20 @@ func (m model) renderMovie() string {
 		subtitleStyle.Render(progress),
 	)
 
-	wrappedContent := m.wrapContent(content)
-	
 	if m.showFeedback {
 		feedback := m.feedbackStyle.Render(m.feedbackText)
-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, 
-			lipgloss.JoinVertical(lipgloss.Center, wrappedContent, "", feedback))
+		feedbackLine := lipgloss.Place(m.width, 1, lipgloss.Center, lipgloss.Center, feedback)
+		mainContent := m.wrapContent(content)
+		
+		// Position feedback at top and main content centered, with feedback not affecting main layout
+		return lipgloss.JoinVertical(lipgloss.Left,
+			feedbackLine,
+			"",
+			mainContent,
+		)
 	}
 	
-	return wrappedContent
+	return m.wrapContent(content)
 }
 
 func (m model) renderLikedList() string {
