@@ -40,22 +40,16 @@ jobs:
     - name: Run go vet
       run: go vet ./...
 
-    - name: Run gofmt
+    - name: Run gofmt check
       run: |
-        # Format code first
-        gofmt -s -w .
-        
-        # Check if there are any changes after formatting
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "Code was not properly formatted. Auto-formatted files:"
-          git diff --name-only
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Auto-format code with gofmt"
-          git push
+        # Check if code is properly formatted
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted properly. Please run 'gofmt -s -w .' locally and commit the changes."
+          echo "Files that need formatting:"
+          gofmt -s -l .
+          exit 1
         else
-          echo "Code is already properly formatted"
+          echo "Code is properly formatted"
         fi
 
     - name: Build for current platform
