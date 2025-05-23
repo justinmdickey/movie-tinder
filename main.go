@@ -5,23 +5,27 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	omdbClient    *OMDBClient
-	storage       *Storage
-	currentMovie  *Movie
-	movieIndex    int
-	loading       bool
-	error         string
-	unseenMovies  []string
-	showLikedList bool
-	likedMovies   []*Movie
-	width         int
-	height        int
+	omdbClient     *OMDBClient
+	storage        *Storage
+	currentMovie   *Movie
+	movieIndex     int
+	loading        bool
+	error          string
+	unseenMovies   []string
+	showLikedList  bool
+	likedMovies    []*Movie
+	width          int
+	height         int
+	feedbackText   string
+	feedbackStyle  lipgloss.Style
+	showFeedback   bool
 }
 
 var (
@@ -57,12 +61,50 @@ var (
 	superlikeStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("201")).
 			Bold(true)
+
+	feedbackLikeStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("46")).
+			Background(lipgloss.Color("22")).
+			Bold(true).
+			Padding(1, 2).
+			Margin(1).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("46"))
+
+	feedbackDislikeStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("196")).
+			Background(lipgloss.Color("52")).
+			Bold(true).
+			Padding(1, 2).
+			Margin(1).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("196"))
+
+	feedbackSuperlikeStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("201")).
+			Background(lipgloss.Color("53")).
+			Bold(true).
+			Padding(1, 2).
+			Margin(1).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("201"))
+
+	feedbackNotSeenStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("214")).
+			Background(lipgloss.Color("58")).
+			Bold(true).
+			Padding(1, 2).
+			Margin(1).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("214"))
 )
 
 type movieFetched struct {
 	movie *Movie
 	err   error
 }
+
+type feedbackTimeout struct{}
 
 func initialModel(apiKey string) model {
 	storage := LoadStorage()
@@ -95,6 +137,12 @@ func fetchMovie(client *OMDBClient, imdbID string) tea.Cmd {
 		movie, err := client.GetMovie(imdbID)
 		return movieFetched{movie: movie, err: err}
 	}
+}
+
+func feedbackTimer() tea.Cmd {
+	return tea.Tick(time.Millisecond*1500, func(time.Time) tea.Msg {
+		return feedbackTimeout{}
+	})
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -142,33 +190,44 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.error = ""
 		}
 		return m, nil
+
+	case feedbackTimeout:
+		m.showFeedback = false
+		return m.nextMovie()
 	}
 
 	return m, nil
 }
 
+func (m model) showFeedbackMessage(text string, style lipgloss.Style) (model, tea.Cmd) {
+	m.feedbackText = text
+	m.feedbackStyle = style
+	m.showFeedback = true
+	return m, feedbackTimer()
+}
+
 func (m model) likeMovie() (model, tea.Cmd) {
 	m.storage.LikeMovie(m.currentMovie.ImdbID)
 	m.storage.SaveStorage()
-	return m.nextMovie()
+	return m.showFeedbackMessage("💚 LIKED!", feedbackLikeStyle)
 }
 
 func (m model) dislikeMovie() (model, tea.Cmd) {
 	m.storage.DislikeMovie(m.currentMovie.ImdbID)
 	m.storage.SaveStorage()
-	return m.nextMovie()
+	return m.showFeedbackMessage("❌ DISLIKED", feedbackDislikeStyle)
 }
 
 func (m model) superlikeMovie() (model, tea.Cmd) {
 	m.storage.SuperlikeMovie(m.currentMovie.ImdbID)
 	m.storage.SaveStorage()
-	return m.nextMovie()
+	return m.showFeedbackMessage("💖 SUPERLIKED!", feedbackSuperlikeStyle)
 }
 
 func (m model) markAsNotSeen() (model, tea.Cmd) {
 	m.storage.MarkAsNotSeen(m.currentMovie.ImdbID)
 	m.storage.SaveStorage()
-	return m.nextMovie()
+	return m.showFeedbackMessage("🔄 NOT SEEN", feedbackNotSeenStyle)
 }
 
 func (m model) nextMovie() (model, tea.Cmd) {
@@ -285,7 +344,15 @@ func (m model) renderMovie() string {
 		subtitleStyle.Render(progress),
 	)
 
-	return m.wrapContent(content)
+	wrappedContent := m.wrapContent(content)
+	
+	if m.showFeedback {
+		feedback := m.feedbackStyle.Render(m.feedbackText)
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, 
+			lipgloss.JoinVertical(lipgloss.Center, wrappedContent, "", feedback))
+	}
+	
+	return wrappedContent
 }
 
 func (m model) renderLikedList() string {
