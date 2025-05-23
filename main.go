@@ -53,6 +53,10 @@ var (
 	successStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("46")).
 		Bold(true)
+
+	superlikeStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("201")).
+		Bold(true)
 )
 
 type movieFetched struct {
@@ -112,6 +116,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentMovie != nil && !m.loading {
 				return m.likeMovie()
 			}
+		case "up", "k":
+			if m.currentMovie != nil && !m.loading {
+				return m.superlikeMovie()
+			}
+		case "down", "d":
+			if m.currentMovie != nil && !m.loading {
+				return m.markAsNotSeen()
+			}
 		case "v":
 			return m.toggleLikedList()
 		}
@@ -143,6 +155,18 @@ func (m model) dislikeMovie() (model, tea.Cmd) {
 	return m.nextMovie()
 }
 
+func (m model) superlikeMovie() (model, tea.Cmd) {
+	m.storage.SuperlikeMovie(m.currentMovie.ImdbID)
+	m.storage.SaveStorage()
+	return m.nextMovie()
+}
+
+func (m model) markAsNotSeen() (model, tea.Cmd) {
+	m.storage.MarkAsNotSeen(m.currentMovie.ImdbID)
+	m.storage.SaveStorage()
+	return m.nextMovie()
+}
+
 func (m model) nextMovie() (model, tea.Cmd) {
 	m.movieIndex++
 	if m.movieIndex >= len(m.unseenMovies) {
@@ -162,12 +186,21 @@ func (m model) toggleLikedList() (model, tea.Cmd) {
 
 	m.showLikedList = true
 	var likedMovies []*Movie
+	
+	for _, imdbID := range m.storage.SuperlikedMovies {
+		movie, err := m.omdbClient.GetMovie(imdbID)
+		if err == nil {
+			likedMovies = append(likedMovies, movie)
+		}
+	}
+	
 	for _, imdbID := range m.storage.LikedMovies {
 		movie, err := m.omdbClient.GetMovie(imdbID)
 		if err == nil {
 			likedMovies = append(likedMovies, movie)
 		}
 	}
+	
 	m.likedMovies = likedMovies
 	return m, nil
 }
@@ -210,7 +243,7 @@ func (m model) renderMovie() string {
 		plot = plot[:250] + "..."
 	}
 	
-	controls := "[j/←] Dislike  [l/→] Like  [v] View Liked  [q] Quit"
+	controls := "[j/←] Dislike  [l/→] Like  [k/↑] Superlike  [d/↓] Not Seen  [v] View Liked  [q] Quit"
 	progress := fmt.Sprintf("Progress: %d/%d", m.movieIndex+1, len(TopMovieIDs))
 	
 	content := lipgloss.JoinVertical(lipgloss.Left,
@@ -238,10 +271,37 @@ func (m model) renderLikedList() string {
 	if len(m.likedMovies) == 0 {
 		movieList.WriteString(subtitleStyle.Render("No liked movies yet!"))
 	} else {
-		for i, movie := range m.likedMovies {
-			entry := fmt.Sprintf("%d. %s (%s) - %s", 
-				i+1, movie.Title, movie.Year, movie.ImdbRating)
-			movieList.WriteString(entry + "\n")
+		count := 1
+		
+		if len(m.storage.SuperlikedMovies) > 0 {
+			movieList.WriteString(superlikeStyle.Render("SUPERLIKED:") + "\n")
+			for _, imdbID := range m.storage.SuperlikedMovies {
+				for _, movie := range m.likedMovies {
+					if movie.ImdbID == imdbID {
+						entry := fmt.Sprintf("%d. %s (%s) - %s ★", 
+							count, movie.Title, movie.Year, movie.ImdbRating)
+						movieList.WriteString(superlikeStyle.Render(entry) + "\n")
+						count++
+						break
+					}
+				}
+			}
+			movieList.WriteString("\n")
+		}
+		
+		if len(m.storage.LikedMovies) > 0 {
+			movieList.WriteString(titleStyle.Render("LIKED:") + "\n")
+			for _, imdbID := range m.storage.LikedMovies {
+				for _, movie := range m.likedMovies {
+					if movie.ImdbID == imdbID {
+						entry := fmt.Sprintf("%d. %s (%s) - %s", 
+							count, movie.Title, movie.Year, movie.ImdbRating)
+						movieList.WriteString(entry + "\n")
+						count++
+						break
+					}
+				}
+			}
 		}
 	}
 	
