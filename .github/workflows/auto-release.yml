@@ -4,6 +4,10 @@ on:
   push:
     branches: [ master ]
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   auto-release:
     name: Auto Release
@@ -53,19 +57,19 @@ jobs:
         cd dist
         
         # Linux amd64
-        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz movie-tinder-linux-amd64
+        tar --overwrite -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-amd64.tar.gz movie-tinder-linux-amd64
         
         # Linux arm64
-        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz movie-tinder-linux-arm64
+        tar --overwrite -czf movie-tinder-${{ steps.version.outputs.VERSION }}-linux-arm64.tar.gz movie-tinder-linux-arm64
         
         # macOS amd64
-        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz movie-tinder-darwin-amd64
+        tar --overwrite -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-amd64.tar.gz movie-tinder-darwin-amd64
         
         # macOS arm64
-        tar -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz movie-tinder-darwin-arm64
+        tar --overwrite -czf movie-tinder-${{ steps.version.outputs.VERSION }}-darwin-arm64.tar.gz movie-tinder-darwin-arm64
         
         # Windows amd64
-        zip movie-tinder-${{ steps.version.outputs.VERSION }}-windows-amd64.zip movie-tinder-windows-amd64.exe
+        zip -o movie-tinder-${{ steps.version.outputs.VERSION }}-windows-amd64.zip movie-tinder-windows-amd64.exe
 
     - name: Generate checksums
       run: |
@@ -105,3 +109,5 @@ jobs:
           dist/checksums.txt
         draft: false
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
