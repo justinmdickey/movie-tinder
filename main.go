@@ -11,52 +11,52 @@ import (
 )
 
 type model struct {
-	omdbClient     *OMDBClient
-	storage        *Storage
-	currentMovie   *Movie
-	movieIndex     int
-	loading        bool
-	error          string
-	unseenMovies   []string
-	showLikedList  bool
-	likedMovies    []*Movie
-	width          int
-	height         int
+	omdbClient    *OMDBClient
+	storage       *Storage
+	currentMovie  *Movie
+	movieIndex    int
+	loading       bool
+	error         string
+	unseenMovies  []string
+	showLikedList bool
+	likedMovies   []*Movie
+	width         int
+	height        int
 }
 
 var (
 	borderStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("63")).
-		Padding(1, 2)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("63")).
+			Padding(1, 2)
 
 	headerStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("211")).
-		Bold(true).
-		Align(lipgloss.Center)
+			Foreground(lipgloss.Color("211")).
+			Bold(true).
+			Align(lipgloss.Center)
 
 	titleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("86")).
-		Bold(true)
+			Foreground(lipgloss.Color("86")).
+			Bold(true)
 
 	subtitleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("243"))
+			Foreground(lipgloss.Color("243"))
 
 	helpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241")).
-		Italic(true)
+			Foreground(lipgloss.Color("241")).
+			Italic(true)
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("196")).
-		Bold(true)
+			Foreground(lipgloss.Color("196")).
+			Bold(true)
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("46")).
-		Bold(true)
+			Foreground(lipgloss.Color("46")).
+			Bold(true)
 
 	superlikeStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("201")).
-		Bold(true)
+			Foreground(lipgloss.Color("201")).
+			Bold(true)
 )
 
 type movieFetched struct {
@@ -66,7 +66,7 @@ type movieFetched struct {
 
 func initialModel(apiKey string) model {
 	storage := LoadStorage()
-	
+
 	var unseenMovies []string
 	for _, id := range TopMovieIDs {
 		if !storage.IsSeen(id) {
@@ -173,7 +173,7 @@ func (m model) nextMovie() (model, tea.Cmd) {
 		m.currentMovie = nil
 		return m, nil
 	}
-	
+
 	m.loading = true
 	return m, fetchMovie(m.omdbClient, m.unseenMovies[m.movieIndex])
 }
@@ -186,21 +186,21 @@ func (m model) toggleLikedList() (model, tea.Cmd) {
 
 	m.showLikedList = true
 	var likedMovies []*Movie
-	
+
 	for _, imdbID := range m.storage.SuperlikedMovies {
 		movie, err := m.omdbClient.GetMovie(imdbID)
 		if err == nil {
 			likedMovies = append(likedMovies, movie)
 		}
 	}
-	
+
 	for _, imdbID := range m.storage.LikedMovies {
 		movie, err := m.omdbClient.GetMovie(imdbID)
 		if err == nil {
 			likedMovies = append(likedMovies, movie)
 		}
 	}
-	
+
 	m.likedMovies = likedMovies
 	return m, nil
 }
@@ -221,7 +221,7 @@ func (m model) View() string {
 	}
 
 	if m.currentMovie == nil {
-		content := successStyle.Render("All movies completed!") + "\n\n" + 
+		content := successStyle.Render("All movies completed!") + "\n\n" +
 			helpStyle.Render("Press 'v' to view liked movies\nPress 'q' to quit")
 		return m.wrapContent(content)
 	}
@@ -231,21 +231,21 @@ func (m model) View() string {
 
 func (m model) renderMovie() string {
 	movie := m.currentMovie
-	
+
 	header := headerStyle.Render("MOVIE TINDER")
 	title := titleStyle.Render(fmt.Sprintf("%s (%s)", movie.Title, movie.Year))
-	
+
 	info := fmt.Sprintf("Rating: %s  |  %s", movie.ImdbRating, movie.Genre)
 	details := fmt.Sprintf("Director: %s\nCast: %s", movie.Director, movie.Actors)
-	
+
 	plot := movie.Plot
 	if len(plot) > 250 {
 		plot = plot[:250] + "..."
 	}
-	
+
 	controls := "[j/←] Dislike  [l/→] Like  [k/↑] Superlike  [d/↓] Not Seen  [v] View Liked  [q] Quit"
 	progress := fmt.Sprintf("Progress: %d/%d", m.movieIndex+1, len(TopMovieIDs))
-	
+
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",
@@ -260,25 +260,25 @@ func (m model) renderMovie() string {
 		"",
 		subtitleStyle.Render(progress),
 	)
-	
+
 	return m.wrapContent(content)
 }
 
 func (m model) renderLikedList() string {
 	header := headerStyle.Render("LIKED MOVIES")
-	
+
 	var movieList strings.Builder
 	if len(m.likedMovies) == 0 {
 		movieList.WriteString(subtitleStyle.Render("No liked movies yet!"))
 	} else {
 		count := 1
-		
+
 		if len(m.storage.SuperlikedMovies) > 0 {
 			movieList.WriteString(superlikeStyle.Render("SUPERLIKED:") + "\n")
 			for _, imdbID := range m.storage.SuperlikedMovies {
 				for _, movie := range m.likedMovies {
 					if movie.ImdbID == imdbID {
-						entry := fmt.Sprintf("%d. %s (%s) - %s ★", 
+						entry := fmt.Sprintf("%d. %s (%s) - %s ★",
 							count, movie.Title, movie.Year, movie.ImdbRating)
 						movieList.WriteString(superlikeStyle.Render(entry) + "\n")
 						count++
@@ -288,13 +288,13 @@ func (m model) renderLikedList() string {
 			}
 			movieList.WriteString("\n")
 		}
-		
+
 		if len(m.storage.LikedMovies) > 0 {
 			movieList.WriteString(titleStyle.Render("LIKED:") + "\n")
 			for _, imdbID := range m.storage.LikedMovies {
 				for _, movie := range m.likedMovies {
 					if movie.ImdbID == imdbID {
-						entry := fmt.Sprintf("%d. %s (%s) - %s", 
+						entry := fmt.Sprintf("%d. %s (%s) - %s",
 							count, movie.Title, movie.Year, movie.ImdbRating)
 						movieList.WriteString(entry + "\n")
 						count++
@@ -304,9 +304,9 @@ func (m model) renderLikedList() string {
 			}
 		}
 	}
-	
+
 	controls := "[v] Back to swiping  [q] Quit"
-	
+
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		"",
@@ -314,7 +314,7 @@ func (m model) renderLikedList() string {
 		"",
 		helpStyle.Render(controls),
 	)
-	
+
 	return m.wrapContent(content)
 }
 
@@ -322,10 +322,10 @@ func (m model) wrapContent(content string) string {
 	if m.width == 0 {
 		m.width = 80
 	}
-	
+
 	contentWidth := min(m.width-4, 80)
 	style := borderStyle.Width(contentWidth)
-	
+
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, style.Render(content))
 }
 

@@ -7,20 +7,20 @@ import (
 )
 
 type OMDBClient struct {
-	APIKey string
+	APIKey  string
 	BaseURL string
 }
 
 func NewOMDBClient(apiKey string) *OMDBClient {
 	return &OMDBClient{
-		APIKey: apiKey,
+		APIKey:  apiKey,
 		BaseURL: "http://www.omdbapi.com/",
 	}
 }
 
 func (c *OMDBClient) GetMovie(imdbID string) (*Movie, error) {
 	url := fmt.Sprintf("%s?apikey=%s&i=%s&plot=short", c.BaseURL, c.APIKey, imdbID)
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

@@ -6,18 +6,18 @@ import (
 )
 
 type Storage struct {
-	LikedMovies     []string `json:"liked_movies"`
+	LikedMovies      []string `json:"liked_movies"`
 	SuperlikedMovies []string `json:"superliked_movies"`
-	SeenMovies      []string `json:"seen_movies"`
+	SeenMovies       []string `json:"seen_movies"`
 }
 
 const storageFile = "movie_data.json"
 
 func LoadStorage() *Storage {
 	storage := &Storage{
-		LikedMovies:     []string{},
+		LikedMovies:      []string{},
 		SuperlikedMovies: []string{},
-		SeenMovies:      []string{},
+		SeenMovies:       []string{},
 	}
 
 	data, err := os.ReadFile(storageFile)
