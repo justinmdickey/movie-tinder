@@ -344,20 +344,19 @@ func (m model) renderMovie() string {
 		subtitleStyle.Render(progress),
 	)
 
+	mainContent := m.wrapContent(content)
+	
 	if m.showFeedback {
 		feedback := m.feedbackStyle.Render(m.feedbackText)
-		feedbackLine := lipgloss.Place(m.width, 1, lipgloss.Center, lipgloss.Center, feedback)
-		mainContent := m.wrapContent(content)
 		
-		// Position feedback at top and main content centered, with feedback not affecting main layout
-		return lipgloss.JoinVertical(lipgloss.Left,
-			feedbackLine,
-			"",
+		// Create a simple overlay at the top of the terminal
+		return lipgloss.JoinVertical(lipgloss.Center,
+			lipgloss.Place(m.width, 3, lipgloss.Center, lipgloss.Center, feedback),
 			mainContent,
 		)
 	}
 	
-	return m.wrapContent(content)
+	return mainContent
 }
 
 func (m model) renderLikedList() string {
