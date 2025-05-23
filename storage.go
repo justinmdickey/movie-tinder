@@ -124,3 +124,9 @@ func (s *Storage) IsSeen(imdbID string) bool {
 	}
 	return false
 }
+
+func (s *Storage) ResetAll() {
+	s.LikedMovies = []string{}
+	s.SuperlikedMovies = []string{}
+	s.SeenMovies = []string{}
+}

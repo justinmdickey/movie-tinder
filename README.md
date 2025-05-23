@@ -36,16 +36,18 @@ A terminal-based "Tinder for movies" app built with Go and Bubble Tea. Discover 
 - **k** or **↑** (up arrow): Superlike movie (highlighted in pink)
 - **d** or **↓** (down arrow): Mark as not seen (encounter again)
 - **v**: Toggle between movie swiping and viewing liked movies
+- **r**: Reset all movie preferences and start over
 - **q**: Quit the application
 
 ## Features
 
-- 🎭 Discover 50 top movies of all time
+- 🎭 Discover 100 top movies of all time
 - ✨ Beautiful terminal interface with smooth styling
 - 💾 Persistent storage of your movie preferences
 - ⭐ Superlike system for absolute favorites  
 - 🔄 "Not seen" option to re-encounter movies later
 - 📋 View your curated list of liked movies by category
+- 🔄 Reset functionality to start fresh anytime
 - 📊 Progress tracking through the movie collection
 - 🚀 Cross-platform support (Linux, macOS, Windows)
 

@@ -126,6 +126,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "v":
 			return m.toggleLikedList()
+		case "r":
+			if !m.loading {
+				return m.resetMovies()
+			}
 		}
 
 	case movieFetched:
@@ -205,6 +209,26 @@ func (m model) toggleLikedList() (model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) resetMovies() (model, tea.Cmd) {
+	m.storage.ResetAll()
+	m.storage.SaveStorage()
+	
+	// Reset unseen movies list
+	var unseenMovies []string
+	for _, id := range TopMovieIDs {
+		unseenMovies = append(unseenMovies, id)
+	}
+	
+	m.unseenMovies = unseenMovies
+	m.movieIndex = 0
+	m.currentMovie = nil
+	m.showLikedList = false
+	m.likedMovies = []*Movie{}
+	m.loading = true
+	
+	return m, fetchMovie(m.omdbClient, m.unseenMovies[0])
+}
+
 func (m model) View() string {
 	if m.showLikedList {
 		return m.renderLikedList()
@@ -222,7 +246,7 @@ func (m model) View() string {
 
 	if m.currentMovie == nil {
 		content := successStyle.Render("All movies completed!") + "\n\n" +
-			helpStyle.Render("Press 'v' to view liked movies\nPress 'q' to quit")
+			helpStyle.Render("Press 'v' to view liked movies\nPress 'r' to reset and start over\nPress 'q' to quit")
 		return m.wrapContent(content)
 	}
 
@@ -243,7 +267,7 @@ func (m model) renderMovie() string {
 		plot = plot[:250] + "..."
 	}
 
-	controls := "[j/←] Dislike  [l/→] Like  [k/↑] Superlike  [d/↓] Not Seen  [v] View Liked  [q] Quit"
+	controls := "[j/←] Dislike  [l/→] Like  [k/↑] Superlike  [d/↓] Not Seen  [v] View Liked  [r] Reset  [q] Quit"
 	progress := fmt.Sprintf("Progress: %d/%d", m.movieIndex+1, len(TopMovieIDs))
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
@@ -305,7 +329,7 @@ func (m model) renderLikedList() string {
 		}
 	}
 
-	controls := "[v] Back to swiping  [q] Quit"
+	controls := "[v] Back to swiping  [r] Reset  [q] Quit"
 
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
