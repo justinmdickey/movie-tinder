@@ -12,20 +12,20 @@ import (
 )
 
 type model struct {
-	omdbClient     *OMDBClient
-	storage        *Storage
-	currentMovie   *Movie
-	movieIndex     int
-	loading        bool
-	error          string
-	unseenMovies   []string
-	showLikedList  bool
-	likedMovies    []*Movie
-	width          int
-	height         int
-	feedbackText   string
-	feedbackStyle  lipgloss.Style
-	showFeedback   bool
+	omdbClient    *OMDBClient
+	storage       *Storage
+	currentMovie  *Movie
+	movieIndex    int
+	loading       bool
+	error         string
+	unseenMovies  []string
+	showLikedList bool
+	likedMovies   []*Movie
+	width         int
+	height        int
+	feedbackText  string
+	feedbackStyle lipgloss.Style
+	showFeedback  bool
 }
 
 var (
@@ -63,40 +63,40 @@ var (
 			Bold(true)
 
 	feedbackLikeStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("46")).
-			Background(lipgloss.Color("22")).
-			Bold(true).
-			Padding(1, 2).
-			Margin(1).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("46"))
+				Foreground(lipgloss.Color("46")).
+				Background(lipgloss.Color("22")).
+				Bold(true).
+				Padding(1, 2).
+				Margin(1).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("46"))
 
 	feedbackDislikeStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("196")).
-			Background(lipgloss.Color("52")).
-			Bold(true).
-			Padding(1, 2).
-			Margin(1).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("196"))
+				Foreground(lipgloss.Color("196")).
+				Background(lipgloss.Color("52")).
+				Bold(true).
+				Padding(1, 2).
+				Margin(1).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("196"))
 
 	feedbackSuperlikeStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("201")).
-			Background(lipgloss.Color("53")).
-			Bold(true).
-			Padding(1, 2).
-			Margin(1).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("201"))
+				Foreground(lipgloss.Color("201")).
+				Background(lipgloss.Color("53")).
+				Bold(true).
+				Padding(1, 2).
+				Margin(1).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("201"))
 
 	feedbackNotSeenStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("214")).
-			Background(lipgloss.Color("58")).
-			Bold(true).
-			Padding(1, 2).
-			Margin(1).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("214"))
+				Foreground(lipgloss.Color("214")).
+				Background(lipgloss.Color("58")).
+				Bold(true).
+				Padding(1, 2).
+				Margin(1).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("214"))
 )
 
 type movieFetched struct {
@@ -271,20 +271,20 @@ func (m model) toggleLikedList() (model, tea.Cmd) {
 func (m model) resetMovies() (model, tea.Cmd) {
 	m.storage.ResetAll()
 	m.storage.SaveStorage()
-	
+
 	// Reset unseen movies list
 	var unseenMovies []string
 	for _, id := range TopMovieIDs {
 		unseenMovies = append(unseenMovies, id)
 	}
-	
+
 	m.unseenMovies = unseenMovies
 	m.movieIndex = 0
 	m.currentMovie = nil
 	m.showLikedList = false
 	m.likedMovies = []*Movie{}
 	m.loading = true
-	
+
 	return m, fetchMovie(m.omdbClient, m.unseenMovies[0])
 }
 
@@ -345,13 +345,13 @@ func (m model) renderMovie() string {
 	)
 
 	wrappedContent := m.wrapContent(content)
-	
+
 	if m.showFeedback {
 		feedback := m.feedbackStyle.Render(m.feedbackText)
-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, 
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
 			lipgloss.JoinVertical(lipgloss.Center, wrappedContent, "", feedback))
 	}
-	
+
 	return wrappedContent
 }
 
